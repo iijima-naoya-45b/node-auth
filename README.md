@@ -29,8 +29,11 @@ Rails (Backend)     ※ CRUD・ビジネスロジック処理機関
 ## ✨ 特徴
 
 `マルチプロバイダー対応`: Google, LINE, GitHubでの認証をサポート
+
 `クロスプラットフォーム対応`: ウェブとモバイル（Flutterなどを想定）の両方のクライアントに柔軟に対応
+
 `JWTベースの認証`: Honoが発行するJWT（JSON Web Token）で、安全なAPIアクセスを実現
+
 `クリーンなコードベース`: プラットフォームごとに認証ロジックを分離（`webAuth.mjs`, `mobileAuth.mjs`）し、高い保守性を実現
 
 ## 🛠️ 前提条件
@@ -84,21 +87,26 @@ RAILS_DOMAIN= # 本番
 ```
 
 注意: [サーバーURL] は、ローカル環境であれば http://localhost:3001 などになります。
+
 ## ▶️ 実行方法
 開発モードで実行
-ファイル変更時に自動で再起動します。
-bashnpm run dev
-サーバーは http://localhost:3000 で起動します。
+
+`npm run dev -- -p 3001`
+
 ## 本番環境で実行
-bashnpm start
-🌐 APIエンドポイント
+`npm start`
+
+## 🌐 APIエンドポイント
 このサーバーは以下の認証エンドポイントを提供します。
-ウェブ認証 (クッキーベース)
+
+## `ウェブ認証 (クッキーベース)`
+
 MethodPathDescriptionGET/auth/web/:provider認証プロバイダーのログインページにリダイレクトしますGET/auth/web/:provider/callbackコールバックを処理し、JWTをクッキーに保存後、/dashboardにリダイレクトします
-モバイル認証 (トークンベース)
+
+## `モバイル認証 (トークンベース)`
 MethodPathDescriptionGET/auth/mobile/:provider認証プロバイダーのログインページにリダイレクトしますGET/auth/mobile/:provider/callbackコールバックを処理し、JWTとユーザー情報をJSONで返します
 ## 共通API
-MethodPathDescriptionGET/auth/status現在の認証状態を確認しますGET/api/data認証必須のサンプルAPIです。有効なJWTが必要です
+MethodPathDescriptionGET/auth/status現在の認証状態を確認しますGET/api/data認証必須のサンプルAPIです。有効なJWTが必要です。
 
 ## 🔐 認証フローの解説
 ウェブクライアント
