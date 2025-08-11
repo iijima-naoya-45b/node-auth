@@ -109,22 +109,32 @@ MethodPathDescriptionGET/auth/mobile/:provider認証プロバイダーのログ�
 MethodPathDescriptionGET/auth/status現在の認証状態を確認しますGET/api/data認証必須のサンプルAPIです。有効なJWTが必要です。
 
 ## 🔐 認証フローの解説
-ウェブクライアント
+`**ウェブクライアント**`
 
-ユーザーが /auth/web/google にアクセスします
-HonoがGoogleの認証ページにリダイレクトします
-Googleでのログイン後、HonoのコールバックURLにリダイレクトされます
-Honoは受け取った認証コードでJWTを発行し、クッキーに保存します
-ユーザーは /dashboard にリダイレクトされ、以降のAPIアクセスではクッキーが自動で送信されます
+1.ユーザーが /auth/web/google にアクセスします
 
-モバイルクライアント
+2.HonoがGoogleの認証ページにリダイレクトします
 
-モバイルアプリがカスタムヘッダー X-App-Platform: flutter を付けて /auth/mobile/google にアクセスします
-HonoがGoogleの認証ページにリダイレクトします
-Googleでのログイン後、HonoのコールバックURLにリダイレクトされます
-Honoは受け取った認証コードでJWTを発行し、JSONレスポンスとして返します
-モバイルアプリはJSONからトークンを抽出し、安全な場所に保存します
-以降のAPIアクセスでは、アプリが保存したトークンを Authorization ヘッダーに手動で追加して送信します
+3.Googleでのログイン後、HonoのコールバックURLにリダイレクトされます
+
+
+4.Honoは受け取った認証コードでJWTを発行し、クッキーに保存します
+
+5.ユーザーは /dashboard にリダイレクトされ、以降のAPIアクセスではクッキーが自動で送信されます
+
+`**モバイルクライアント**`
+
+1.モバイルアプリがカスタムヘッダー X-App-Platform: flutter を付けて /auth/mobile/google にアクセスします
+
+2.HonoがGoogleの認証ページにリダイレクトします
+
+3.Googleでのログイン後、HonoのコールバックURLにリダイレクトされます
+
+4.Honoは受け取った認証コードでJWTを発行し、JSONレスポンスとして返します
+
+5.モバイルアプリはJSONからトークンを抽出し、安全な場所に保存します
+
+6.以降のAPIアクセスでは、アプリが保存したトークンを Authorization ヘッダーに手動で追加して送信します
 
 ## ✅ テストの実行
 このプロジェクトでは、認証機能の単体テストに`Vitest`を使用しています。
@@ -138,18 +148,20 @@ Honoは受け取った認証コードでJWTを発行し、JSONレスポンスと
 📁 プロジェクト構成
 ├── src/
 │   ├── auth/
-│   │   ├── auth.mjs            # 認証の共通ロジック（JWT検証、コールバック処理など）
-│   │   ├── mobileAuth.mjs      # モバイル認証に特化したハンドラ
-│   │   ├── webAuth.mjs         # ウェブ認証に特化したハンドラ
-│   │   └── oauthClients.mjs    # OAuthプロバイダーごとのクライアント定義
+│   │   ├── auth.mjs               # 認証の共通ロジック（JWT検証、コールバック処理など）
+│   │   ├── mobileAuth.mjs         # モバイル認証に特化したハンドラ
+│   │   └── oauthClients.mjs       # OAuthプロバイダーごとのクライアント定義
+│   │   └── railsIntegration.mjs   # Rails APIとの統合ロジック
+│   │   └── utils.mjs              # ユーティリティ関数
+│   │   ├── webAuth.mjs            # ウェブ認証に特化したハンドラ
 │   ├── config/
-│   │   └── index.mjs           # 環境変数や定数など、各種設定をまとめる
-│   ├── middleware/
-│   │   └── auth.mjs            # 認証ミドルウェア（ensureAuthenticatedなど）
+│   │   └── constants.mjs       # 環境変数・定数などの有効化
+│   │   └── index.mjs           # 各種設定
 │   ├── routes/
 │   │   └── index.mjs           # ルーティング設定をまとめる
 │   └── server.mjs              # メインのサーバー起動スクリプト
-├── tests/
+├── __tests__/
+│   └── integration.test.mjs    # Railsとの疎通用検証
 │   └── auth.test.mjs           # 認証機能のテスト
 ├── .env                        # 環境変数ファイル
 ├── package.json
