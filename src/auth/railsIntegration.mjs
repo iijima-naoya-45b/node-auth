@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { RAILS_DOMAIN } from '../config/constants.mjs';
+import { RAILS_URL } from '../config/constants.mjs';
 
 export const sendUserDataToRails = async (user, jwtToken) => {
     try {

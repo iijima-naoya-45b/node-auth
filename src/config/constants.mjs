@@ -15,10 +15,8 @@ export const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL;
 // サーバー設定
 export const SERVER_PORT = process.env.SERVER_PORT;
 export const SERVER_HOST = process.env.SERVER_HOST;
-export const FE_LOCALHOST = process.env.FE_LOCALHOST;
-export const FE_DOMAIN = process.env.FE_DOMAIN;
-export const RAILS_LOCALHOST = process.env.RAILS_LOCALHOST;
-export const RAILS_DOMAIN = process.env.RAILS_DOMAIN;
+export const FRONTEND_URL = process.env.FRONTEND_URL;
+export const RAILS_URL = process.env.RAILS_URL;
 // 認証スコープの設定
 export const scopes = [
     'https://www.googleapis.com/auth/userinfo.email',

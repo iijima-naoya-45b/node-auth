@@ -1,7 +1,10 @@
-// src/routes.mjs
-import { ensureAuthenticated, checkAuthStatus } from '../auth/auth.mjs';
-import { webRedirectToProvider, webHandleCallback } from '../auth/webAuth.mjs';
-import { mobileRedirectToProvider, mobileHandleCallback } from '../auth/mobileAuth.mjs';
+import {
+    ensureAuthenticated,
+    checkAuthStatus,
+    redirectToProvider,
+    handleCallback,
+    handleMobileAuth
+} from '../auth/auth.mjs';
 
 export const setupRoutes = (app) => {
     // 共通認証ルート
@@ -18,18 +21,10 @@ export const setupRoutes = (app) => {
         { provider: 'github', path: '/auth/web/github' }
     ];
     webAuthRoutes.map(({ provider, path }) => {
-        app.get(`${path}`, webRedirectToProvider(provider));
-        app.get(`${path}/callback`, webHandleCallback(provider));
+        app.get(`${path}`, redirectToProvider(provider));
+        app.get(`${path}/callback`, handleCallback(provider));
     });
 
-    // Mobile認証ルート
-    const mobileAuthRoutes = [
-        { provider: 'google', path: '/auth/mobile/google' },
-        { provider: 'line', path: '/auth/mobile/line' },
-        { provider: 'github', path: '/auth/mobile/github' }
-    ];
-    mobileAuthRoutes.map(({ provider, path }) => {
-        app.get(`${path}`, mobileRedirectToProvider(provider));
-        app.get(`${path}/callback`, mobileHandleCallback(provider));
-    });
+    // mobile認証ルート
+    app.post('/auth/mobile', handleMobileAuth);
 };
