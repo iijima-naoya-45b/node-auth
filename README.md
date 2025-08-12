@@ -195,8 +195,35 @@ export default function Home() {
     const redirectUri = 'http://localhost:3001/auth/web/google/callback';
     const scope = 'openid email profile';
     const responseType = 'code';
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${encodeURIComponent(scope)}`;
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
     window.location.href = authUrl;
+  };
+
+  // リフレッシュトークンを扱うためのロジック
+  const handleRefreshToken = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // 修正箇所：credentials: 'include' を追加
+        credentials: 'include', 
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Access token refreshed successfully:', data.accessToken);
+        alert('Access token has been refreshed.');
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to refresh token:', errorData.error);
+        alert(`Failed to refresh token: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      alert('An error occurred while refreshing the token.');
+    }
   };
 
   useEffect(() => {
@@ -219,6 +246,10 @@ export default function Home() {
         </button>
         <button onClick={handleGoogleLogin} style={{ padding: '10px 20px', fontSize: '16px' }}>
           Login with Google
+        </button>
+        {/* リフレッシュトークンを叩くためのボタン */}
+        <button onClick={handleRefreshToken} style={{ padding: '10px 20px', fontSize: '16px', marginTop: '10px' }}>
+          Refresh Token
         </button>
       </main>
     </div>
