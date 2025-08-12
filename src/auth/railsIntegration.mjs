@@ -3,7 +3,7 @@ import { RAILS_URL } from '../config/constants.mjs';
 
 export const sendUserDataToRails = async (user, jwtToken) => {
     try {
-        const response = await fetch(`${RAILS_DOMAIN}/api/users`, {
+        const response = await fetch(`${RAILS_URL}/api/users`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

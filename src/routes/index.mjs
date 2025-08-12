@@ -3,7 +3,8 @@ import {
     checkAuthStatus,
     redirectToProvider,
     handleCallback,
-    handleMobileAuth
+    handleMobileAuth,
+    refreshAccessToken
 } from '../auth/auth.mjs';
 
 export const setupRoutes = (app) => {
@@ -22,6 +23,8 @@ export const setupRoutes = (app) => {
 
     // mobile認証ルート
     app.post('/auth/mobile', handleMobileAuth);
+    // refresh用のルートを追加
+    app.post('/auth/refresh', refreshAccessToken);
     // 上記以外は認証reqの精査
     app.all('*', ensureAuthenticated);
     // 認証許可の場合、reqを通過
