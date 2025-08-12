@@ -44,27 +44,52 @@ export const redirectToProvider = (providerName) => (c) => {
     return c.redirect(authorizationUrl);
 };
 
+// provider別の認証管理
 export const handleCallback = (providerName) => async (c) => {
     const code = c.req.query('code');
     if (!code) {
         return c.json({ error: 'Authorization code not found' }, 400);
     }
     const provider = OAUTH_PROVIDERS[providerName];
+    if (!provider) {
+        return c.json({ error: 'Provider not found' }, 400);
+    }
     try {
         let tokenData, user;
-        if (providerName === 'google') {
-            tokenData = await provider.getToken(provider.client, code);
-            user = await provider.getUserInfo(provider.client, tokenData);
-        } else {
-            const result = await provider.getToken(code);
-            tokenData = result.tokenData;
-            user = result.user;
+        let exp;
+
+        switch (providerName) {
+            case 'google':
+                const tokens = await provider.getToken(provider.client, code);
+                tokenData = tokens.tokenData;
+                user = await provider.getUserInfo(provider.client, tokenData);
+                const decodedIdToken = JSON.parse(Buffer.from(tokenData.id_token.split('.')[1], 'base64').toString());
+                exp = decodedIdToken.exp;
+                break;
+            case 'line':
+            case 'github':
+            case 'twitter':
+            case 'facebook':
+                const result = await provider.getToken(code);
+                tokenData = result.tokenData;
+                user = result.user;
+                exp = Math.floor(Date.now() / 1000) + (tokenData.expires_in || 3600);
+                break;
+            default:
+                return c.json({ error: 'Unsupported provider' }, 400);
         }
 
-        const jwtPayload = { user: user, oauth_tokens: tokenData };
+        const jwtPayload = {
+            user: user,
+            providerName,
+            accessToken: tokenData.access_token,
+            // refreshToken: tokenData.refresh_token,
+            exp: exp,
+        };
+        if (tokenData.refresh_token) {
+            jwtPayload.refreshToken = tokenData.refresh_token;
+        }
         const jwtToken = await sign(jwtPayload, JWT_SECRET);
-
-        // await sendUserDataToRails(user, jwtToken);
 
         c.res.headers.set('Set-Cookie', `jwt=${jwtToken}; Path=/; HttpOnly; SameSite=Strict`);
         return c.redirect(`${FRONTEND_URL}`);
@@ -74,12 +99,56 @@ export const handleCallback = (providerName) => async (c) => {
     }
 };
 
+export const refreshAccessToken = async (c) => {
+    const token =
+        c.req.header('Authorization')?.split(' ')[1] ||
+        parseCookies(c.req.header('Cookie'))['jwt'];
+
+    if (!token) {
+        return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    try {
+        const decoded = await verify(token, JWT_SECRET);
+        const { refreshToken, user, providerName } = decoded;
+        const provider = OAUTH_PROVIDERS[providerName];
+
+        if (!refreshToken || !providerName || !provider || !provider.refreshAccessToken) {
+            return c.json({ accessToken: decoded.accessToken });
+        }
+
+        // accessToken更新処理
+        const tokenData = await provider.refreshAccessToken(refreshToken);
+
+        const newRefreshToken = tokenData.refresh_token || refreshToken;
+        const newAccessToken = tokenData.access_token;
+
+        const newJwtPayload = {
+            user,
+            providerName,
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+            exp: Math.floor(Date.now() / 1000) + (tokenData.expires_in || 3600),
+        };
+        const newJwtToken = await sign(newJwtPayload, JWT_SECRET);
+
+        // Cookie を更新
+        c.res.headers.set(
+            'Set-Cookie',
+            `jwt=${newJwtToken}; Path=/; HttpOnly; SameSite=Strict`
+        );
+
+        return c.json({ accessToken: tokenData.access_token });
+    } catch (error) {
+        console.error('Error refreshing access token:', error);
+        return c.json({ error: 'Could not refresh access token' }, 401);
+    }
+};
+
 const googleClient = new OAuth2Client();
 
 export const handleMobileAuth = async (c) => {
     const { providerName, token, clientId } = await c.req.json();
-
-    console.log('Received mobile auth request:', { providerName, token, clientId });
 
     if (!providerName || !token || !clientId) {
         return c.json({ error: 'プロバイダー名、トークン、またはクライアントIDが提供されていません' }, 400);
