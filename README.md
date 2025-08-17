@@ -1,8 +1,8 @@
 # Hono OAuth認証サーバー (BFF)
 
-## 📄 プロジェクト概要
+## `📄 プロジェクト概要`
 このプロジェクトは、**BFF（Backend For Frontend）**として機能するHono OAuth認証サーバーです。フロントエンド（Next.js）とバックエンド（Rails）の間に位置し、認証・認可を一元管理します。
-システム構成
+
 
 ```bash
 Next.js (Client)     ※ フロントエンドロジック
@@ -13,18 +13,11 @@ Rails (Backend)     ※ CRUD・ビジネスロジック処理機関
 役割分担
 ```
 
-1.Next.js: UIコンポーネント、ユーザーインタラクション
-
-2.Hono BFF: OAuth認証、JWT発行・検証、APIプロキシ、セキュリティ
-
-3.Rails API: データベース操作、ビジネスロジック、CRUD処理
-
-
 ## サポートする認証フロー
 
-`ウェブアプリケーション:` ブラウザのリダイレクトとHTTPクッキーを使用する従来の認証フロー
+`ウェブアプリケーション:` クッキーを使用する認証フロー
 
-`モバイルアプリケーション:` カスタムヘッダーとJSONレスポンスを使用する現代的な認証フロー
+`モバイルアプリケーション:` keyChainにjwtを格納する認証フロー
 
 ## ✨ 特徴
 
@@ -40,7 +33,11 @@ Rails (Backend)     ※ CRUD・ビジネスロジック処理機関
 プロジェクトを実行する前に、以下のソフトウェアがインストールされていることを確認してください。
 
 `Node.js (v18以上を推奨)`
-`npm`
+
+```bash
+node -v
+v23.11.0
+```
 
 ## ⚙️ 環境設定
 OAuth認証を機能させるために、各プロバイダーから認証情報を取得し、プロジェクトの環境変数に設定する必要があります。
@@ -56,31 +53,26 @@ LINE: LINE Developers Console
 GitHub: GitHub Developer Settings
 
 ### 3. 環境変数の設定
-取得した情報を .env ファイルに以下のように記述します。
+取得した情報を .env ファイルに以下のように記述します。(CLIENT_IDはフロントエンドに記載)
 ```bash
 # JWT
 JWT_SECRET=
 # Google
-GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=
 # GITHUB
-GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 GITHUB_CALLBACK_URL=
 # Line
-LINE_CHANNEL_ID=
 LINE_CHANNEL_SECRET=
 LINE_CALLBACK_URL=
 # Server
 SERVER_PORT=3001 # 本番は、443
 SERVER_HOST=localhost # domain
 # Twitter
-TWITTER_CLIENT_ID=
 TWITTER_CLIENT_SECRET=
 TWITTER_CALLBACK_URL=
 # Facebook
-FACEBOOK_CLIENT_ID=
 FACEBOOK_CLIENT_SECRET=
 FACEBOOK_CALLBACK_URL=
 # domain
@@ -89,7 +81,7 @@ FRONTEND_URL='http://localhost:3000'
 RAILS_URL='http://localhost:3002'
 ```
 
-注意: [サーバーURL] は、ローカル環境であれば http://localhost:3001 などになります。
+注意: [サーバーURL] は、ローカル環境であれば http://localhost:3001 を想定しております。
 
 ## ▶️ 実行方法
 開発モードで実行
@@ -104,12 +96,28 @@ RAILS_URL='http://localhost:3002'
 
 ## `ウェブ認証 (クッキーベース)`
 
-MethodPathDescriptionGET/auth/web/:provider認証プロバイダーのログインページにリダイレクトしますGET/auth/web/:provider/callbackコールバックを処理し、JWTをクッキーに保存後、/dashboardにリダイレクトします
+`MethodPathDescriptionGET/auth/web/:provider`
+
+認証プロバイダーのログインページにリダイレクトします
+
+`GET/auth/web/:provider/callback`
+
+コールバックを処理し、JWTをクッキーに保存後、`/`にリダイレクトします
 
 ## `モバイル認証 (トークンベース)`
-MethodPathDescriptionGET/auth/mobile/:provider認証プロバイダーのログインページにリダイレクトしますGET/auth/mobile/:provider/callbackコールバックを処理し、JWTとユーザー情報をJSONで返します
+`MethodPathDescriptionGET/auth/mobile/:provider`
+
+認証プロバイダーのログインページにリダイレクトします
+
+`GET/auth/mobile/:provider/callback`
+
+コールバックを処理し、JWTとユーザー情報をJSONで返します
 ## 共通API
-MethodPathDescriptionGET/auth/status現在の認証状態を確認しますGET/api/data認証必須のサンプルAPIです。有効なJWTが必要です。
+`MethodPathDescriptionGET/auth/status`
+
+現在の認証状態を確認します
+
+`GET/api/data`認証必須のサンプルAPIです。有効なJWTが必要です。
 
 ## 🔐 認証フローの解説
 `**ウェブクライアント**`
@@ -119,7 +127,6 @@ MethodPathDescriptionGET/auth/status現在の認証状態を確認しますGET/a
 2.HonoがGoogleの認証ページにリダイレクトします
 
 3.Googleでのログイン後、HonoのコールバックURLにリダイレクトされます
-
 
 4.Honoは受け取った認証コードでJWTを発行し、クッキーに保存します
 
